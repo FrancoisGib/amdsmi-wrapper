@@ -1,32 +1,13 @@
-use amdsmi_sys::{amdsmi_get_socket_handles, amdsmi_init, amdsmi_init_flags_t, amdsmi_shut_down, amdsmi_status_t};
+use amdsmi_sys::{amdsmi_get_socket_handles, amdsmi_init, amdsmi_init_flags_t, amdsmi_shut_down};
 
 use crate::{error::AmdSmiError, socket::Socket};
 
 pub mod error;
-pub mod socket;
 pub mod processor;
+pub mod socket;
 
-#[macro_export]
-macro_rules! amdsmi_unsafe {
-    ($fn:expr) => {{
-        let status = unsafe { $fn };
-        if status != amdsmi_sys::amdsmi_status_t::AMDSMI_STATUS_SUCCESS {
-            Err(crate::error::AmdSmiError::from(status))
-        } else {
-            Ok(())
-        }
-    }};
-}
-
-impl From<amdsmi_status_t> for AmdSmiError {
-    fn from(status: amdsmi_status_t) -> Self {
-        match status {
-            amdsmi_status_t::AMDSMI_STATUS_DRIVER_NOT_LOADED => Self::DriverNotLoaded,
-            amdsmi_status_t::AMDSMI_STATUS_NOT_SUPPORTED => Self::NotSupported,
-            _ => Self::AmdSmiError(status),
-        }
-    }
-}
+#[allow(clippy::macro_metavars_in_unsafe)]
+mod utils;
 
 pub(crate) type Result<T> = std::result::Result<T, AmdSmiError>;
 

@@ -35,22 +35,22 @@ fn get_rocm_dir() -> Option<PathBuf> {
 fn get_amdsmi_lib_dir(rocm_dir: Option<&PathBuf>) -> Result<String> {
     let amdsmi_file = "libamd_smi.so";
 
-    if let Ok(lib_dir) = env::var("AMDSMI_LIB_DIR") {
-        if PathBuf::from(lib_dir.clone()).join(amdsmi_file).exists() {
-            return Ok(lib_dir);
-        }
+    if let Ok(lib_dir) = env::var("AMDSMI_LIB_DIR")
+        && PathBuf::from(lib_dir.clone()).join(amdsmi_file).exists()
+    {
+        return Ok(lib_dir);
     }
 
-    if let Ok(current_dir) = env::current_dir() {
-        if current_dir.join(amdsmi_file).exists() {
-            return Ok(current_dir.to_string_lossy().into_owned());
-        }
+    if let Ok(current_dir) = env::current_dir()
+        && current_dir.join(amdsmi_file).exists()
+    {
+        return Ok(current_dir.to_string_lossy().into_owned());
     }
 
-    if let Some(lib_dir) = rocm_dir {
-        if lib_dir.join("lib").join(amdsmi_file).exists() {
-            return Ok(lib_dir.join("lib").to_string_lossy().into_owned());
-        }
+    if let Some(lib_dir) = rocm_dir
+        && lib_dir.join("lib").join(amdsmi_file).exists()
+    {
+        return Ok(lib_dir.join("lib").to_string_lossy().into_owned());
     }
 
     Err(std::io::Error::new(
@@ -158,25 +158,23 @@ fn generate_amdsmi_bindings(amdsmi_header_file: &str) {
         .prepend_enum_name(false)
         .rustified_enum("^(.*)$")
         .apply_whitelist()
-        .generate().unwrap();
+        .generate()
+        .unwrap();
 
     let bindings_path = PathBuf::from("src/bindings.rs");
-    bindings
-        .write_to_file(&bindings_path).unwrap();
+    bindings.write_to_file(&bindings_path).unwrap();
 }
 
 fn main() {
     let rocm_dir = get_rocm_dir();
-    let amdsmi_lib_dir =
-        get_amdsmi_lib_dir(rocm_dir.as_ref()).unwrap();
+    let amdsmi_lib_dir = get_amdsmi_lib_dir(rocm_dir.as_ref()).unwrap();
 
     println!("cargo:rustc-link-lib=amd_smi");
     println!("cargo:rustc-link-search=native={}", amdsmi_lib_dir);
 
     let generate_wrapper = env::var("AMDSMI_GENERATE_BINDINGS").is_ok();
     if generate_wrapper {
-        let amdsmi_header_file =
-            get_amdsmi_header_file(rocm_dir.as_ref()).unwrap();
+        let amdsmi_header_file = get_amdsmi_header_file(rocm_dir.as_ref()).unwrap();
         generate_amdsmi_bindings(&amdsmi_header_file);
     }
 }

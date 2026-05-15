@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 thiserror = "2.0.18"
 amdsmi-sys = { path = "../amdsmi-sys" }
+
+[lints.clippy]
+macro_metavars_in_unsafe = "allow"

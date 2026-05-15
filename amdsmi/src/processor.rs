@@ -1,8 +1,9 @@
-use amdsmi_sys::{AMDSMI_GPU_UUID_SIZE, amdsmi_board_info_t, amdsmi_get_energy_count, amdsmi_get_gpu_board_info, amdsmi_get_gpu_device_uuid, amdsmi_processor_handle};
-
-use crate::{
-    Result, amdsmi_unsafe
+use amdsmi_sys::{
+    AMDSMI_GPU_UUID_SIZE, amdsmi_board_info_t, amdsmi_get_energy_count, amdsmi_get_gpu_board_info,
+    amdsmi_get_gpu_device_uuid, amdsmi_processor_handle,
 };
+
+use crate::{Result, amdsmi_unsafe};
 
 #[derive(Debug)]
 pub struct Processor {

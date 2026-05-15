@@ -1,8 +1,9 @@
-use amdsmi_sys::{AMDSMI_MAX_STRING_LENGTH, amdsmi_get_processor_handles, amdsmi_get_socket_info, amdsmi_socket_handle};
-
-use crate::{
-    Result, amdsmi_unsafe, processor::Processor
+use amdsmi_sys::{
+    AMDSMI_MAX_STRING_LENGTH, amdsmi_get_processor_handles, amdsmi_get_socket_info,
+    amdsmi_socket_handle,
 };
+
+use crate::{Result, amdsmi_unsafe, processor::Processor};
 
 #[derive(Debug)]
 pub struct Socket {
