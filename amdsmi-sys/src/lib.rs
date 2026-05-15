@@ -1,2 +1,2 @@
-#![allow(unused, non_camel_case_types)]
+#![allow(dead_code, non_camel_case_types)]
 include!("bindings.rs");
