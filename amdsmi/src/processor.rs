@@ -1,9 +1,17 @@
 use amdsmi_sys::{
     AMDSMI_GPU_UUID_SIZE, amdsmi_board_info_t, amdsmi_get_energy_count, amdsmi_get_gpu_board_info,
-    amdsmi_get_gpu_device_uuid, amdsmi_processor_handle,
+    amdsmi_get_gpu_device_uuid, amdsmi_get_gpu_memory_usage, amdsmi_memory_type_t,
+    amdsmi_processor_handle,
 };
 
 use crate::{Result, amdsmi_unsafe};
+
+#[derive(Debug)]
+pub struct EnergyCount {
+    pub energy_accumulator: u64,
+    pub counter_resolution: f32,
+    pub timestamp: u64,
+}
 
 #[derive(Debug)]
 pub struct Processor {
@@ -56,11 +64,16 @@ impl Processor {
             timestamp,
         })
     }
-}
 
-#[derive(Debug)]
-pub struct EnergyCount {
-    pub energy_accumulator: u64,
-    pub counter_resolution: f32,
-    pub timestamp: u64,
+    pub fn get_vram_usage(&self) -> Result<u64> {
+        let mut vram_usage: u64 = 0;
+
+        amdsmi_unsafe!(amdsmi_get_gpu_memory_usage(
+            self.inner,
+            amdsmi_memory_type_t::AMDSMI_MEM_TYPE_VRAM,
+            &mut vram_usage,
+        ))?;
+
+        Ok(vram_usage)
+    }
 }

@@ -92,13 +92,10 @@ fn get_amdsmi_header_file(rocm_dir: Option<&PathBuf>) -> Result<String> {
 fn generate_amdsmi_bindings(amdsmi_header_file: &str) {
     let bindings = bindgen::Builder::default()
         .header(amdsmi_header_file)
-
         .generate_comments(false)
         .prepend_enum_name(false)
-
         .rustified_enum("^(.*)$")
         .derive_debug(true)
-
         .apply_bindings()
         .generate()
         .unwrap();

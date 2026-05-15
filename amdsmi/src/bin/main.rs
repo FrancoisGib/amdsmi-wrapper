@@ -16,6 +16,7 @@ fn main() {
             println!("{:?}", processor.get_energy_count().unwrap());
             println!("{}", processor.get_board_info().unwrap());
             println!();
+            println!("{}", processor.get_vram_usage().unwrap());
         }
 
         println!();

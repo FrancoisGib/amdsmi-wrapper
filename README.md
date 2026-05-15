@@ -5,7 +5,7 @@ sudo apt install amd-smi-lib
 
 required to generate bindings:
 ```bash
-sudo apt install clang libclang-dev llvm pkg-config
+sudo apt install clang
 ```
 
 generate bindings:
