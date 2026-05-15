@@ -35,8 +35,6 @@ impl Processor {
                 .into_owned()
         };
 
-        println!("{info:?}");
-
         Ok(product_name)
     }
 

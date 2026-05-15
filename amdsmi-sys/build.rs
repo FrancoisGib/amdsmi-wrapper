@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 
 use bindgen::Builder;
 
+include!("allowlist.rs");
+
 fn get_rocm_dir() -> Option<PathBuf> {
     if let Ok(entries) = fs::read_dir(Path::new("/opt")) {
         let mut rocm_dirs: Vec<PathBuf> = entries
@@ -87,55 +89,36 @@ fn get_amdsmi_header_file(rocm_dir: Option<&PathBuf>) -> Result<String> {
     ))
 }
 
-macro_rules! whitelist {
-    ($($name:ident),* $(,)?) => {
-        &[
-            $(stringify!($name)),*
-        ]
-    };
+fn generate_amdsmi_bindings(amdsmi_header_file: &str) {
+    let bindings = bindgen::Builder::default()
+        .header(amdsmi_header_file)
+
+        .generate_comments(false)
+        .prepend_enum_name(false)
+
+        .rustified_enum("^(.*)$")
+        .derive_debug(true)
+
+        .apply_bindings()
+        .generate()
+        .unwrap();
+
+    let bindings_path = PathBuf::from("src/bindings.rs");
+    bindings.write_to_file(&bindings_path).unwrap();
 }
 
-const STRUCT_WHITELIST: &[&str] = whitelist![
-    processor_type_t,
-    amdsmi_status_t,
-    amdsmi_vram_usage_t,
-    amdsmi_board_info_t,
-    amdsmi_power_info_t,
-    amdsmi_process_handle_t,
-    amdsmi_proc_info_t,
-    amdsmi_gpu_metrics_t,
-    amdsmi_processor_handle,
-    amdsmi_init_flags_t,
-];
-
-const FN_WHITELIST: &[&str] = whitelist![
-    amdsmi_get_socket_handles,
-    amdsmi_get_socket_info,
-    amdsmi_get_processor_info,
-    amdsmi_get_energy_count,
-    amdsmi_get_gpu_memory_usage,
-    amdsmi_get_gpu_metrics_info,
-    amdsmi_get_gpu_device_uuid,
-    amdsmi_init,
-    amdsmi_shut_down,
-    amdsmi_get_gpu_board_info,
-    amdsmi_get_processor_handles,
-];
-
-const CONST_WHITELIST: &[&str] = whitelist![AMDSMI_MAX_STRING_LENGTH, AMDSMI_GPU_UUID_SIZE,];
-
-trait Whitelist: Sized {
-    fn apply_whitelist(self) -> Builder {
+trait Bindings: Sized {
+    fn apply_bindings(self) -> Builder {
         let mut builder = self.builder();
-        for item in STRUCT_WHITELIST {
+        for item in ALLOWLIST_STRUCTS {
             builder = builder.allowlist_type(item)
         }
 
-        for item in FN_WHITELIST {
+        for item in ALLOWLIST_FUNCTIONS {
             builder = builder.allowlist_function(item)
         }
 
-        for item in CONST_WHITELIST {
+        for item in ALLOWLIST_CONSTANTS {
             builder = builder.allowlist_item(item)
         }
 
@@ -145,24 +128,10 @@ trait Whitelist: Sized {
     fn builder(self) -> Builder;
 }
 
-impl Whitelist for Builder {
+impl Bindings for Builder {
     fn builder(self) -> Builder {
         self
     }
-}
-
-fn generate_amdsmi_bindings(amdsmi_header_file: &str) {
-    let bindings = bindgen::Builder::default()
-        .header(amdsmi_header_file)
-        .generate_comments(false)
-        .prepend_enum_name(false)
-        .rustified_enum("^(.*)$")
-        .apply_whitelist()
-        .generate()
-        .unwrap();
-
-    let bindings_path = PathBuf::from("src/bindings.rs");
-    bindings.write_to_file(&bindings_path).unwrap();
 }
 
 fn main() {
