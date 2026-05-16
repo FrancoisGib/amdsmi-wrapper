@@ -3,14 +3,15 @@ use amdsmi_sys::{
     amdsmi_socket_handle,
 };
 
-use crate::{Result, amdsmi_unsafe, processor::Processor};
+use crate::{AmdSmi, Result, amdsmi_unsafe, processor::Processor};
 
 #[derive(Debug)]
-pub struct Socket {
+pub struct Socket<'a> {
     pub(crate) inner: amdsmi_socket_handle,
+    pub(crate) _amdsmi: &'a AmdSmi,
 }
 
-impl Socket {
+impl<'a> Socket<'a> {
     pub fn get_socket_info(&self) -> Result<String> {
         let mut name_buf = [0; AMDSMI_MAX_STRING_LENGTH as usize];
         amdsmi_unsafe!(amdsmi_get_socket_info(
@@ -23,7 +24,7 @@ impl Socket {
         Ok(name.to_string_lossy().into_owned())
     }
 
-    pub fn get_processor_handles(&self) -> Result<Vec<Processor>> {
+    pub fn get_processor_handles(&'a self) -> Result<Vec<Processor<'a>>> {
         let mut processor_count = 0;
         amdsmi_unsafe!(amdsmi_get_processor_handles(
             self.inner,
@@ -40,7 +41,10 @@ impl Socket {
 
         Ok(processor_handles
             .into_iter()
-            .map(|handle| Processor { inner: handle })
+            .map(|handle| Processor {
+                inner: handle,
+                _socket: self,
+            })
             .collect())
     }
 }

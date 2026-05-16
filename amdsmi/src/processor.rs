@@ -5,14 +5,15 @@ use amdsmi_sys::{
     amdsmi_processor_handle,
 };
 
-use crate::{Result, amdsmi_unsafe, types::EnergyCount};
+use crate::{Result, amdsmi_unsafe, socket::Socket, types::EnergyCount};
 
 #[derive(Debug)]
-pub struct Processor {
+pub struct Processor<'a> {
     pub(crate) inner: amdsmi_processor_handle,
+    pub(crate) _socket: &'a Socket<'a>,
 }
 
-impl Processor {
+impl<'a> Processor<'a> {
     pub fn get_uuid(&self) -> Result<String> {
         let mut uuid_length = AMDSMI_GPU_UUID_SIZE;
         let mut uuid_buf = [0; AMDSMI_GPU_UUID_SIZE as usize];

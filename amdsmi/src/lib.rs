@@ -14,9 +14,10 @@ pub mod types;
 #[allow(clippy::macro_metavars_in_unsafe)]
 mod utils;
 
+#[derive(Debug)]
 pub struct AmdSmi;
 
-impl AmdSmi {
+impl<'a> AmdSmi {
     pub fn init(&self) -> Result<()> {
         amdsmi_unsafe!(amdsmi_init(
             amdsmi_init_flags_t::AMDSMI_INIT_AMD_GPUS as u64
@@ -29,7 +30,7 @@ impl AmdSmi {
         Ok((version.major, version.minor, version.release))
     }
 
-    pub fn get_socket_handles(&self) -> Result<Vec<Socket>> {
+    pub fn get_socket_handles(&'a self) -> Result<Vec<Socket<'a>>> {
         let mut socket_count = 0;
         amdsmi_unsafe!(amdsmi_get_socket_handles(
             &mut socket_count,
@@ -44,7 +45,10 @@ impl AmdSmi {
 
         Ok(socket_handles
             .into_iter()
-            .map(|handle| Socket { inner: handle })
+            .map(|handle| Socket {
+                inner: handle,
+                _amdsmi: self,
+            })
             .collect())
     }
 }
