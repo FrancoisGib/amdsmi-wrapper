@@ -219,6 +219,55 @@ pub enum amdsmi_memory_type_t {
     AMDSMI_MEM_TYPE_VIS_VRAM = 1,
     AMDSMI_MEM_TYPE_GTT = 2,
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct amdsmi_version_t {
+    pub year: u32,
+    pub major: u32,
+    pub minor: u32,
+    pub release: u32,
+    pub build: *const ::std::os::raw::c_char,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of amdsmi_version_t"][::std::mem::size_of::<amdsmi_version_t>() - 24usize];
+    ["Alignment of amdsmi_version_t"][::std::mem::align_of::<amdsmi_version_t>() - 8usize];
+    ["Offset of field: amdsmi_version_t::year"]
+        [::std::mem::offset_of!(amdsmi_version_t, year) - 0usize];
+    ["Offset of field: amdsmi_version_t::major"]
+        [::std::mem::offset_of!(amdsmi_version_t, major) - 4usize];
+    ["Offset of field: amdsmi_version_t::minor"]
+        [::std::mem::offset_of!(amdsmi_version_t, minor) - 8usize];
+    ["Offset of field: amdsmi_version_t::release"]
+        [::std::mem::offset_of!(amdsmi_version_t, release) - 12usize];
+    ["Offset of field: amdsmi_version_t::build"]
+        [::std::mem::offset_of!(amdsmi_version_t, build) - 16usize];
+};
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct amdsmi_process_info_t {
+    pub process_id: u32,
+    pub pasid: u32,
+    pub vram_usage: u64,
+    pub sdma_usage: u64,
+    pub cu_occupancy: u32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of amdsmi_process_info_t"][::std::mem::size_of::<amdsmi_process_info_t>() - 32usize];
+    ["Alignment of amdsmi_process_info_t"]
+        [::std::mem::align_of::<amdsmi_process_info_t>() - 8usize];
+    ["Offset of field: amdsmi_process_info_t::process_id"]
+        [::std::mem::offset_of!(amdsmi_process_info_t, process_id) - 0usize];
+    ["Offset of field: amdsmi_process_info_t::pasid"]
+        [::std::mem::offset_of!(amdsmi_process_info_t, pasid) - 4usize];
+    ["Offset of field: amdsmi_process_info_t::vram_usage"]
+        [::std::mem::offset_of!(amdsmi_process_info_t, vram_usage) - 8usize];
+    ["Offset of field: amdsmi_process_info_t::sdma_usage"]
+        [::std::mem::offset_of!(amdsmi_process_info_t, sdma_usage) - 16usize];
+    ["Offset of field: amdsmi_process_info_t::cu_occupancy"]
+        [::std::mem::offset_of!(amdsmi_process_info_t, cu_occupancy) - 24usize];
+};
 unsafe extern "C" {
     pub fn amdsmi_init(init_flags: u64) -> amdsmi_status_t;
 }
@@ -261,6 +310,15 @@ unsafe extern "C" {
     ) -> amdsmi_status_t;
 }
 unsafe extern "C" {
+    pub fn amdsmi_get_lib_version(version: *mut amdsmi_version_t) -> amdsmi_status_t;
+}
+unsafe extern "C" {
+    pub fn amdsmi_get_gpu_compute_process_info_by_pid(
+        pid: u32,
+        proc_: *mut amdsmi_process_info_t,
+    ) -> amdsmi_status_t;
+}
+unsafe extern "C" {
     pub fn amdsmi_get_gpu_device_uuid(
         processor_handle: amdsmi_processor_handle,
         uuid_length: *mut ::std::os::raw::c_uint,
@@ -271,5 +329,18 @@ unsafe extern "C" {
     pub fn amdsmi_get_gpu_board_info(
         processor_handle: amdsmi_processor_handle,
         info: *mut amdsmi_board_info_t,
+    ) -> amdsmi_status_t;
+}
+unsafe extern "C" {
+    pub fn amdsmi_get_power_info(
+        processor_handle: amdsmi_processor_handle,
+        info: *mut amdsmi_power_info_t,
+    ) -> amdsmi_status_t;
+}
+unsafe extern "C" {
+    pub fn amdsmi_get_gpu_process_list(
+        processor_handle: amdsmi_processor_handle,
+        max_processes: *mut u32,
+        list: *mut amdsmi_proc_info_t,
     ) -> amdsmi_status_t;
 }

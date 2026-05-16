@@ -1,15 +1,18 @@
-use amdsmi_sys::{amdsmi_get_socket_handles, amdsmi_init, amdsmi_init_flags_t, amdsmi_shut_down};
+use amdsmi_sys::{
+    amdsmi_get_lib_version, amdsmi_get_socket_handles, amdsmi_init, amdsmi_init_flags_t,
+    amdsmi_shut_down, amdsmi_version_t,
+};
 
-use crate::{error::AmdSmiError, socket::Socket};
+use crate::{socket::Socket, types::Result};
 
 pub mod error;
+pub mod process;
 pub mod processor;
 pub mod socket;
+pub mod types;
 
 #[allow(clippy::macro_metavars_in_unsafe)]
 mod utils;
-
-pub(crate) type Result<T> = std::result::Result<T, AmdSmiError>;
 
 pub struct AmdSmi;
 
@@ -18,6 +21,12 @@ impl AmdSmi {
         amdsmi_unsafe!(amdsmi_init(
             amdsmi_init_flags_t::AMDSMI_INIT_AMD_GPUS as u64
         ))
+    }
+
+    pub fn get_lib_version(&self) -> Result<(u32, u32, u32)> {
+        let mut version: amdsmi_version_t = unsafe { std::mem::zeroed() };
+        amdsmi_unsafe!(amdsmi_get_lib_version(&mut version))?;
+        Ok((version.major, version.minor, version.release))
     }
 
     pub fn get_socket_handles(&self) -> Result<Vec<Socket>> {

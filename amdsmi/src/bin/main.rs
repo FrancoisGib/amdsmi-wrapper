@@ -1,8 +1,19 @@
 use amdsmi::AmdSmi;
 
 fn main() {
+    // let args: Vec<String> = std::env::args().collect();
+
+    // if args.len() < 2 {
+    //     eprintln!("Usage: {} <PID>", args[0]);
+    //     return;
+    // }
+
+    // let target_pid: u32 = args[1].parse().expect("Invalid PID");
+
     let amdsmi = AmdSmi;
     amdsmi.init().unwrap();
+    let (major, minor, patch) = amdsmi.get_lib_version().unwrap();
+    println!("Version: {major}.{minor}.{patch}");
 
     let socket_handles = amdsmi.get_socket_handles().unwrap();
     println!("socket handles: {socket_handles:?}");
@@ -12,14 +23,19 @@ fn main() {
         println!("processor handles: {processor_handles:?}");
 
         for processor in processor_handles {
-            println!("{}", processor.get_uuid().unwrap());
-            println!("{:?}", processor.get_energy_count().unwrap());
-            println!("{}", processor.get_board_info().unwrap());
+            println!("uuid: {}", processor.get_uuid().unwrap());
+            println!("product_name: {}", processor.get_board_info().unwrap());
             println!();
-            println!("{}", processor.get_vram_usage().unwrap());
+            println!("energy: {:?}", processor.get_energy_count().unwrap());
+            println!("power: {:?}", processor.get_power().unwrap());
+            println!("vram: {}", processor.get_vram_usage().unwrap());
+
+            // println!("{:#?}", processor.get_gpu_process_list().unwrap());
         }
 
         println!();
-        println!();
+        // println!();
     }
+
+    // println!("process: {:#?}", get_process_info(target_pid).unwrap());
 }
