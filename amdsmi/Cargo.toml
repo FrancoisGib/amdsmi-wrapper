@@ -4,9 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+libloading.workspace = true
+
 thiserror = "2.0.18"
 amdsmi-sys = { path = "../amdsmi-sys" }
-libloading = "0.9.0"
 
 [lints.clippy]
 macro_metavars_in_unsafe = "allow"

@@ -5,7 +5,7 @@ edition = "2024"
 links = "amdsmi"
 
 [dependencies]
-libloading = "0.8.0"
+libloading.workspace = true
 
 [build-dependencies]
 bindgen = "0.72.1"

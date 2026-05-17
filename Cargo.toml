@@ -4,3 +4,6 @@ members = [
     "amdsmi-sys",
     "amdsmi",
 ]
+
+[workspace.dependencies]
+libloading = "0.8.0"
