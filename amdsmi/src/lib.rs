@@ -1,12 +1,10 @@
-use amdsmi_sys::{
-    amdsmi_get_lib_version, amdsmi_get_socket_handles, amdsmi_init, amdsmi_init_flags_t,
-    amdsmi_shut_down, amdsmi_version_t,
-};
+use std::sync::Arc;
 
-use crate::{socket::Socket, types::Result};
+use amdsmi_sys::{AmdSmiLib, amdsmi_init_flags_t, amdsmi_version_t};
+
+use crate::{error::AmdSmiError, socket::Socket, types::Result, utils::find_amdsmi_path};
 
 pub mod error;
-pub mod process;
 pub mod processor;
 pub mod socket;
 pub mod types;
@@ -14,47 +12,57 @@ pub mod types;
 #[allow(clippy::macro_metavars_in_unsafe)]
 mod utils;
 
-#[derive(Debug)]
-pub struct AmdSmi;
+pub struct AmdSmi {
+    inner: Arc<AmdSmiInner>,
+}
 
-impl<'a> AmdSmi {
-    pub fn init(&self) -> Result<()> {
-        amdsmi_unsafe!(amdsmi_init(
-            amdsmi_init_flags_t::AMDSMI_INIT_AMD_GPUS as u64
-        ))
+struct AmdSmiInner {
+    lib: AmdSmiLib,
+}
+
+impl AmdSmi {
+    pub fn init() -> Result<Self> {
+        let lib_path = find_amdsmi_path()?;
+        let lib = unsafe { AmdSmiLib::new(lib_path) }.map_err(|_| AmdSmiError::LibraryNotFound)?;
+
+        amdsmi_unsafe!(lib.amdsmi_init(amdsmi_init_flags_t::AMDSMI_INIT_AMD_GPUS as u64))?;
+        let inner = Arc::new(AmdSmiInner { lib });
+        Ok(Self { inner })
     }
 
     pub fn get_lib_version(&self) -> Result<(u32, u32, u32)> {
         let mut version: amdsmi_version_t = unsafe { std::mem::zeroed() };
-        amdsmi_unsafe!(amdsmi_get_lib_version(&mut version))?;
+        amdsmi_unsafe!(self.inner.lib.amdsmi_get_lib_version(&mut version))?;
         Ok((version.major, version.minor, version.release))
     }
 
-    pub fn get_socket_handles(&'a self) -> Result<Vec<Socket<'a>>> {
+    pub fn get_socket_handles(&self) -> Result<Vec<Socket>> {
         let mut socket_count = 0;
-        amdsmi_unsafe!(amdsmi_get_socket_handles(
-            &mut socket_count,
-            std::ptr::null_mut()
-        ))?;
+        amdsmi_unsafe!(
+            self.inner
+                .lib
+                .amdsmi_get_socket_handles(&mut socket_count, std::ptr::null_mut())
+        )?;
 
         let mut socket_handles = vec![std::ptr::null_mut(); socket_count as usize];
-        amdsmi_unsafe!(amdsmi_get_socket_handles(
-            &mut socket_count,
-            socket_handles.as_mut_ptr()
-        ))?;
+        amdsmi_unsafe!(
+            self.inner
+                .lib
+                .amdsmi_get_socket_handles(&mut socket_count, socket_handles.as_mut_ptr())
+        )?;
 
         Ok(socket_handles
             .into_iter()
             .map(|handle| Socket {
                 inner: handle,
-                _amdsmi: self,
+                amdsmi: self.inner.clone(),
             })
             .collect())
     }
 }
 
-impl Drop for AmdSmi {
+impl Drop for AmdSmiInner {
     fn drop(&mut self) {
-        unsafe { amdsmi_shut_down() };
+        unsafe { self.lib.amdsmi_shut_down() };
     }
 }

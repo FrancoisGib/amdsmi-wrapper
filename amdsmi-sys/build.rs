@@ -34,33 +34,6 @@ fn get_rocm_dir() -> Option<PathBuf> {
     None
 }
 
-fn get_amdsmi_lib_dir(rocm_dir: Option<&PathBuf>) -> Result<String> {
-    let amdsmi_file = "libamd_smi.so";
-
-    if let Ok(lib_dir) = env::var("AMDSMI_LIB_DIR")
-        && PathBuf::from(lib_dir.clone()).join(amdsmi_file).exists()
-    {
-        return Ok(lib_dir);
-    }
-
-    if let Ok(current_dir) = env::current_dir()
-        && current_dir.join(amdsmi_file).exists()
-    {
-        return Ok(current_dir.to_string_lossy().into_owned());
-    }
-
-    if let Some(lib_dir) = rocm_dir
-        && lib_dir.join("lib").join(amdsmi_file).exists()
-    {
-        return Ok(lib_dir.join("lib").to_string_lossy().into_owned());
-    }
-
-    Err(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        "libamd_smi.so library not found.",
-    ))
-}
-
 fn get_amdsmi_header_file(rocm_dir: Option<&PathBuf>) -> Result<String> {
     let amdsmi_header_path = "amdsmi.h";
 
@@ -95,6 +68,8 @@ fn generate_amdsmi_bindings(amdsmi_header_file: &str) {
         .generate_comments(false)
         .prepend_enum_name(false)
         .rustified_enum("^(.*)$")
+        .dynamic_library_name("AmdSmiLib")
+        .dynamic_link_require_all(false)
         .derive_debug(true)
         .apply_bindings()
         .generate()
@@ -132,14 +107,8 @@ impl Bindings for Builder {
 }
 
 fn main() {
-    let rocm_dir = get_rocm_dir();
-    let amdsmi_lib_dir = get_amdsmi_lib_dir(rocm_dir.as_ref()).unwrap();
-
-    println!("cargo:rustc-link-lib=amd_smi");
-    println!("cargo:rustc-link-search=native={}", amdsmi_lib_dir);
-
-    let generate_wrapper = env::var("AMDSMI_GENERATE_BINDINGS").is_ok();
-    if generate_wrapper {
+    if env::var("AMDSMI_GENERATE_BINDINGS").is_ok() {
+        let rocm_dir = get_rocm_dir();
         let amdsmi_header_file = get_amdsmi_header_file(rocm_dir.as_ref()).unwrap();
         generate_amdsmi_bindings(&amdsmi_header_file);
     }

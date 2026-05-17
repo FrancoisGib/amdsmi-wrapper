@@ -1,20 +1,18 @@
-use amdsmi_sys::{
-    AMDSMI_MAX_STRING_LENGTH, amdsmi_get_processor_handles, amdsmi_get_socket_info,
-    amdsmi_socket_handle,
-};
+use std::sync::Arc;
 
-use crate::{AmdSmi, Result, amdsmi_unsafe, processor::Processor};
+use amdsmi_sys::{AMDSMI_MAX_STRING_LENGTH, amdsmi_socket_handle};
 
-#[derive(Debug)]
-pub struct Socket<'a> {
+use crate::{AmdSmiInner, Result, amdsmi_unsafe, processor::Processor};
+
+pub struct Socket {
     pub(crate) inner: amdsmi_socket_handle,
-    pub(crate) _amdsmi: &'a AmdSmi,
+    pub(crate) amdsmi: Arc<AmdSmiInner>,
 }
 
-impl<'a> Socket<'a> {
+impl Socket {
     pub fn get_socket_info(&self) -> Result<String> {
         let mut name_buf = [0; AMDSMI_MAX_STRING_LENGTH as usize];
-        amdsmi_unsafe!(amdsmi_get_socket_info(
+        amdsmi_unsafe!(self.amdsmi.lib.amdsmi_get_socket_info(
             self.inner,
             AMDSMI_MAX_STRING_LENGTH as usize,
             name_buf.as_mut_ptr()
@@ -24,16 +22,16 @@ impl<'a> Socket<'a> {
         Ok(name.to_string_lossy().into_owned())
     }
 
-    pub fn get_processor_handles(&'a self) -> Result<Vec<Processor<'a>>> {
+    pub fn get_processor_handles(&self) -> Result<Vec<Processor>> {
         let mut processor_count = 0;
-        amdsmi_unsafe!(amdsmi_get_processor_handles(
+        amdsmi_unsafe!(self.amdsmi.lib.amdsmi_get_processor_handles(
             self.inner,
             &mut processor_count,
             std::ptr::null_mut()
         ))?;
 
         let mut processor_handles = vec![std::ptr::null_mut(); processor_count as usize];
-        amdsmi_unsafe!(amdsmi_get_processor_handles(
+        amdsmi_unsafe!(self.amdsmi.lib.amdsmi_get_processor_handles(
             self.inner,
             &mut processor_count,
             processor_handles.as_mut_ptr(),
@@ -43,8 +41,11 @@ impl<'a> Socket<'a> {
             .into_iter()
             .map(|handle| Processor {
                 inner: handle,
-                _socket: self,
+                amdsmi: self.amdsmi.clone(),
             })
             .collect())
     }
 }
+
+unsafe impl Send for Socket {}
+unsafe impl Sync for Socket {}

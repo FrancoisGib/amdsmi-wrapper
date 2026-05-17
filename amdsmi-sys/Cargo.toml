@@ -4,9 +4,16 @@ version = "0.1.0"
 edition = "2024"
 links = "amdsmi"
 
+[dependencies]
+libloading = "0.8.0"
+
 [build-dependencies]
 bindgen = "0.72.1"
 
 [lints.rust]
 dead_code = "allow"
 non_camel_case_types = "allow"
+unsafe_op_in_unsafe_fn = "allow"
+
+[lints.clippy]
+missing_safety_doc = "allow"

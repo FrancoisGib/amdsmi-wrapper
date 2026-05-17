@@ -9,6 +9,9 @@ pub enum AmdSmiError {
     #[error("Operation not supported")]
     NotSupported,
 
+    #[error("Library not found")]
+    LibraryNotFound,
+
     #[error("amdsmi error, status: {0:?}")]
     AmdSmiError(amdsmi_status_t),
 }
