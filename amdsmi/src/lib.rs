@@ -2,15 +2,18 @@ use std::sync::Arc;
 
 use amdsmi_sys::{AmdSmiLib, amdsmi_init_flags_t, amdsmi_version_t};
 
-use crate::{error::AmdSmiError, socket::Socket, types::Result, utils::find_amdsmi_path};
+use crate::{error::AmdSmiError, types::Result, utils::find_amdsmi_path};
 
 pub mod error;
-pub mod processor;
-pub mod socket;
+mod processor;
+mod socket;
 pub mod types;
 
 #[allow(clippy::macro_metavars_in_unsafe)]
 mod utils;
+
+pub use processor::Processor;
+pub use socket::Socket;
 
 pub struct AmdSmi {
     inner: Arc<AmdSmiInner>,
