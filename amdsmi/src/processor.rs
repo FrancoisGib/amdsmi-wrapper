@@ -7,6 +7,7 @@ use amdsmi_sys::{
 
 use crate::{AmdSmiInner, Result, amdsmi_unsafe, types::EnergyCount};
 
+#[derive(Debug, Clone)]
 pub struct Processor {
     pub(crate) inner: amdsmi_processor_handle,
     pub(crate) amdsmi: Arc<AmdSmiInner>,

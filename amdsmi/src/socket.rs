@@ -4,6 +4,7 @@ use amdsmi_sys::{AMDSMI_MAX_STRING_LENGTH, amdsmi_socket_handle};
 
 use crate::{AmdSmiInner, Result, amdsmi_unsafe, processor::Processor};
 
+#[derive(Debug, Clone)]
 pub struct Socket {
     pub(crate) inner: amdsmi_socket_handle,
     pub(crate) amdsmi: Arc<AmdSmiInner>,

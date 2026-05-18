@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{fmt::Debug, sync::Arc};
 
 use amdsmi_sys::{AmdSmiLib, amdsmi_init_flags_t, amdsmi_version_t};
 
@@ -21,6 +21,12 @@ pub struct AmdSmi {
 
 struct AmdSmiInner {
     lib: AmdSmiLib,
+}
+
+impl Debug for AmdSmiInner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AmdSmiInner").finish()
+    }
 }
 
 impl AmdSmi {
